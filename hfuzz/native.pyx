@@ -1,0 +1,87 @@
+# -*- Mode: Cython -*-
+
+import os
+
+from libc.stdint cimport *
+
+
+cdef extern from "helper.h":
+    cdef enum:
+        _HF_PC_GUARD_MAX
+
+cdef extern void HonggfuzzFetchData(const uint8_t** buf_ptr, size_t* len_ptr)
+cdef extern void __cyg_profile_func_enter(uintptr_t func, uintptr_t caller)
+cdef extern void __cyg_profile_func_exit(uintptr_t func, uintptr_t caller)
+cdef extern void __sanitizer_cov_trace_cmp1(uint8_t  Arg1, uint8_t  Arg2)
+cdef extern void __sanitizer_cov_trace_cmp2(uint16_t Arg1, uint16_t Arg2)
+cdef extern void __sanitizer_cov_trace_cmp4(uint32_t Arg1, uint32_t Arg2)
+cdef extern void __sanitizer_cov_trace_cmp8(uint64_t Arg1, uint64_t Arg2)
+cdef extern void __sanitizer_cov_trace_pc_guard(uint32_t* guard)
+cdef extern void hfuzz_trace_pc(uintptr_t pc)
+cdef extern void hfuzzInstrumentInit()
+cdef extern void instrumentClearNewCov()
+
+
+cdef extern from "Python.h":
+    object PyMemoryView_FromMemory(char *mem, Py_ssize_t size, int flags)
+
+    cdef enum:
+        PyBUF_READ
+
+
+class HFuzzException(Exception):
+    pass
+
+
+_initialized = False
+
+
+class HFuzz(object):
+    def __init__(self):
+        global _initialized
+        if _initialized:
+            raise HFuzzException('HFuzz already initalized!')
+        _initialized = True
+        hfuzzInstrumentInit()
+
+    def persistent(self, callback):
+        cdef const uint8_t* buff = <uint8_t*>0
+        cdef       size_t   size = 0
+        instrumentClearNewCov()
+        while True:
+            HonggfuzzFetchData(&buff, &size)
+            view = PyMemoryView_FromMemory(<char*>buff, size, PyBUF_READ)
+            callback(view)
+
+    def trace_cmp(self, arg1, arg2, size):
+        if size == 1:
+            __sanitizer_cov_trace_cmp1(arg1, arg2)
+        elif size == 2:
+            __sanitizer_cov_trace_cmp2(arg1, arg2)
+        elif size == 4:
+            __sanitizer_cov_trace_cmp4(arg1, arg2)
+        elif size == 8:
+            __sanitizer_cov_trace_cmp8(arg1, arg2)
+        else:
+            raise HFuzzException('Unknown trace_cmp size')
+
+    def trace_cmp1(self, arg1, arg2):
+        __sanitizer_cov_trace_cmp1(arg1, arg2)
+
+    def trace_cmp2(self, arg1, arg2):
+        __sanitizer_cov_trace_cmp2(arg1, arg2)
+
+    def trace_cmp4(self, arg1, arg2):
+        __sanitizer_cov_trace_cmp4(arg1, arg2)
+
+    def trace_cmp8(self, arg1, arg2):
+        __sanitizer_cov_trace_cmp8(arg1, arg2)
+
+    def trace_edge(self, pc):
+        cdef uint32_t guard = pc
+        guard %= _HF_PC_GUARD_MAX
+        __sanitizer_cov_trace_pc_guard(&guard)
+
+    def trace_pc(self, pc):
+        hfuzz_trace_pc(pc)
+
