@@ -42,4 +42,5 @@ Well, the main reasons are these:
    (e.g.: one-off custom feedback implementations, research, CTFs, etc...)
 2. Fuzzing python programs. Coupled with some nice bytecode-level
    instrumentation, this could be interesting.
-
+3. Reimplement [AFL-unicorn](https://github.com/Battelle/afl-unicorn) without
+   patching unicorn's QEMU (hello `UC_HOOK_BLOCK`).
