@@ -9,6 +9,12 @@ cdef extern from "helper.h":
     cdef enum:
         _HF_PC_GUARD_MAX
 
+
+#TODO(babush): is there a better way?
+cdef extern from "helper_2to3.h":
+    object hfuzz_mem2py(void *ptr, Py_ssize_t size)
+
+
 cdef extern void HonggfuzzFetchData(const uint8_t** buf_ptr, size_t* len_ptr)
 cdef extern void __cyg_profile_func_enter(uintptr_t func, uintptr_t caller)
 cdef extern void __cyg_profile_func_exit(uintptr_t func, uintptr_t caller)
@@ -20,13 +26,6 @@ cdef extern void __sanitizer_cov_trace_pc_guard(uint32_t* guard)
 cdef extern void hfuzz_trace_pc(uintptr_t pc)
 cdef extern void hfuzzInstrumentInit()
 cdef extern void instrumentClearNewCov()
-
-
-cdef extern from "Python.h":
-    object PyMemoryView_FromMemory(char *mem, Py_ssize_t size, int flags)
-
-    cdef enum:
-        PyBUF_READ
 
 
 class HFuzzException(Exception):
@@ -50,7 +49,7 @@ class HFuzz(object):
         instrumentClearNewCov()
         while True:
             HonggfuzzFetchData(&buff, &size)
-            view = PyMemoryView_FromMemory(<char*>buff, size, PyBUF_READ)
+            view = hfuzz_mem2py(<void*>buff, size)
             callback(view)
 
     def trace_cmp(self, arg1, arg2, size):
