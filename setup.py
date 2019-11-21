@@ -21,7 +21,7 @@ ext_modules = [
             os.path.join(HFUZZ_PATH, 'libhfuzz/libhfuzz.a'),
             os.path.join(HFUZZ_PATH, 'libhfcommon/libhfcommon.a'),
         ],
-        include_dirs=['../'],
+        include_dirs=[HFUZZ_PATH],
     )
 ]
 
