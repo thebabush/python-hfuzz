@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from distutils.core import setup, Extension
+import os
 
 from Cython.Build import cythonize
 
@@ -9,13 +10,16 @@ from Cython.Build import cythonize
 #       Currently it fails due to the relative path in `extra_objects`.
 
 
+HFUZZ_PATH = os.getenv('HFUZZ_PATH', '..')
+
+
 ext_modules = [
     Extension(
         'hfuzz.native',
         ['hfuzz/native.pyx'],
         extra_objects=[
-            '../libhfuzz/libhfuzz.a',
-            '../libhfcommon/libhfcommon.a',
+            os.path.join(HFUZZ_PATH, 'libhfuzz/libhfuzz.a'),
+            os.path.join(HFUZZ_PATH, 'libhfcommon/libhfcommon.a'),
         ],
         include_dirs=['../'],
     )
