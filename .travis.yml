@@ -2,11 +2,20 @@ language: python
 python:
   - "2.7"
   - "3.6"
-before_script:
+  - "nightly"
+before_install:
+# TODO: proper way?
+  - export ORIG_PATH=$(pwd)
+  - sudo apt-get -y install binutils-dev pkg-config libunwind8-dev
   - wget https://github.com/google/honggfuzz/archive/master.zip -O /tmp/hf.zip
   - mkdir -p /tmp/build
   - cd /tmp/build && unzip /tmp/hf.zip && cd honggfuzz-master && make
+  - cd $ORIG_PATH
   - export HFUZZ_PATH=/tmp/build/honggfuzz-master
 install:
+  - pwd
   - pip install -U -r requirements.txt
   - python setup.py install
+# TODO: test
+script:
+  - true
