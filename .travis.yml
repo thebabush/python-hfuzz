@@ -5,7 +5,7 @@ python:
 before_script:
   - wget https://github.com/google/honggfuzz/archive/master.zip -O /tmp/hf.zip
   - mkdir -p /tmp/build
-  - cd /tmp/build && unzip /tmp/hf.zip && make
+  - cd /tmp/build && unzip /tmp/hf.zip && cd honggfuzz-master && make
   - export HFUZZ_PATH=/tmp/build
 install:
   - pip install -U -r requirements.txt
