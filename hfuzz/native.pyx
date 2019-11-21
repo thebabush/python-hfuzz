@@ -22,6 +22,8 @@ cdef extern void __sanitizer_cov_trace_cmp1(uint8_t  Arg1, uint8_t  Arg2)
 cdef extern void __sanitizer_cov_trace_cmp2(uint16_t Arg1, uint16_t Arg2)
 cdef extern void __sanitizer_cov_trace_cmp4(uint32_t Arg1, uint32_t Arg2)
 cdef extern void __sanitizer_cov_trace_cmp8(uint64_t Arg1, uint64_t Arg2)
+cdef extern void hfuzz_trace_cmp4(uintptr_t pc, uint32_t Arg1, uint32_t Arg2)
+cdef extern void hfuzz_trace_cmp8(uintptr_t pc, uint64_t Arg1, uint64_t Arg2)
 cdef extern void __sanitizer_cov_trace_pc_guard(uint32_t* guard)
 cdef extern void hfuzz_trace_pc(uintptr_t pc)
 cdef extern void hfuzzInstrumentInit()
@@ -75,6 +77,12 @@ class HFuzz(object):
 
     def trace_cmp8(self, arg1, arg2):
         __sanitizer_cov_trace_cmp8(arg1, arg2)
+
+    def trace_cmp4_internal(self, pc, arg1, arg2):
+        hfuzz_trace_cmp4(pc, arg1, arg2)
+
+    def trace_cmp8_internal(self, pc, arg1, arg2):
+        hfuzz_trace_cmp8(pc, arg1, arg2)
 
     def trace_edge(self, pc):
         cdef uint32_t guard = pc
