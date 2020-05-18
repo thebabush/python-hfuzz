@@ -18,10 +18,8 @@ cdef extern from "helper_2to3.h":
 cdef extern void HonggfuzzFetchData(const uint8_t** buf_ptr, size_t* len_ptr)
 cdef extern void __cyg_profile_func_enter(uintptr_t func, uintptr_t caller)
 cdef extern void __cyg_profile_func_exit(uintptr_t func, uintptr_t caller)
-cdef extern void __sanitizer_cov_trace_cmp1(uint8_t  Arg1, uint8_t  Arg2)
-cdef extern void __sanitizer_cov_trace_cmp2(uint16_t Arg1, uint16_t Arg2)
-cdef extern void __sanitizer_cov_trace_cmp4(uint32_t Arg1, uint32_t Arg2)
-cdef extern void __sanitizer_cov_trace_cmp8(uint64_t Arg1, uint64_t Arg2)
+cdef extern void hfuzz_trace_cmp1(uintptr_t pc, uint8_t Arg1, uint8_t Arg2)
+cdef extern void hfuzz_trace_cmp2(uintptr_t pc, uint16_t Arg1, uint16_t Arg2)
 cdef extern void hfuzz_trace_cmp4(uintptr_t pc, uint32_t Arg1, uint32_t Arg2)
 cdef extern void hfuzz_trace_cmp8(uintptr_t pc, uint64_t Arg1, uint64_t Arg2)
 cdef extern void __sanitizer_cov_trace_pc_guard(uint32_t* guard)
@@ -54,34 +52,28 @@ class HFuzz(object):
             view = hfuzz_mem2py(<void*>buff, size)
             callback(view)
 
-    def trace_cmp(self, arg1, arg2, size):
+    def trace_cmp(self, pc, arg1, arg2, size):
         if size == 1:
-            __sanitizer_cov_trace_cmp1(arg1, arg2)
+            hfuzz_trace_cmp1(pc, arg1, arg2)
         elif size == 2:
-            __sanitizer_cov_trace_cmp2(arg1, arg2)
+            hfuzz_trace_cmp2(pc, arg1, arg2)
         elif size == 4:
-            __sanitizer_cov_trace_cmp4(arg1, arg2)
+            hfuzz_trace_cmp4(pc, arg1, arg2)
         elif size == 8:
-            __sanitizer_cov_trace_cmp8(arg1, arg2)
+            hfuzz_trace_cmp8(pc, arg1, arg2)
         else:
             raise HFuzzException('Unknown trace_cmp size')
 
-    def trace_cmp1(self, arg1, arg2):
-        __sanitizer_cov_trace_cmp1(arg1, arg2)
+    def trace_cmp1(self, pc, arg1, arg2):
+        hfuzz_trace_cmp1(pc, arg1, arg2)
 
-    def trace_cmp2(self, arg1, arg2):
-        __sanitizer_cov_trace_cmp2(arg1, arg2)
+    def trace_cmp2(self, pc, arg1, arg2):
+        hfuzz_trace_cmp2(pc, arg1, arg2)
 
-    def trace_cmp4(self, arg1, arg2):
-        __sanitizer_cov_trace_cmp4(arg1, arg2)
-
-    def trace_cmp8(self, arg1, arg2):
-        __sanitizer_cov_trace_cmp8(arg1, arg2)
-
-    def trace_cmp4_internal(self, pc, arg1, arg2):
+    def trace_cmp4(self, pc, arg1, arg2):
         hfuzz_trace_cmp4(pc, arg1, arg2)
 
-    def trace_cmp8_internal(self, pc, arg1, arg2):
+    def trace_cmp8(self, pc, arg1, arg2):
         hfuzz_trace_cmp8(pc, arg1, arg2)
 
     def trace_edge(self, pc):

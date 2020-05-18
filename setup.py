@@ -22,6 +22,7 @@ ext_modules = [
             os.path.join(HFUZZ_PATH, 'libhfcommon/libhfcommon.a'),
         ],
         include_dirs=[HFUZZ_PATH],
+        libraries=['rt'],
     )
 ]
 
@@ -29,7 +30,7 @@ setup(
     name='hfuzz',
     setup_requires=['cython'],
     version='0.1',
-    ext_modules=cythonize(ext_modules),
+    ext_modules=cythonize(ext_modules, language_level=3, cache=False),
     packages=['hfuzz'],
     package_dir={
         'hfuzz': 'hfuzz',
